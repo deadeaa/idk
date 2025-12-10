@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "233191954348",
+    "project_id": "nara-skincare",
+    "storage_bucket": "nara-skincare.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233191954348:android:ce30f5b140532147e14c09",
+        "android_client_info": {
+          "package_name": "com.example.skincare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkYMvbUx5CV2lhojo5t2-Da8esl7KI-bM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

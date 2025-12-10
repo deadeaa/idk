@@ -1,122 +1,141 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+import 'auth/crown_screen.dart';
+import 'pages/dashboard.dart';
+import 'auth/forgot_password.dart';
+import 'auth/register_page.dart';
+import 'auth/login_page.dart';
+import 'providers/cart_provider.dart';
+import 'providers/user_provider.dart';
+import 'favorite_service.dart';
+import 'pages/delivery.dart';
+import 'pages/history_payment.dart';
+import 'pages/favorite.dart';
+import 'pages/checkout.dart';
+import 'pages/search_results.dart';
+import 'pages/cart.dart';
+import 'pages/all_product.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized successfully');
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      print('👤 Current user: ${user?.uid ?? "Not logged in"}');
+    } catch (e) {
+      print('⚠️ Firebase test error: $e');
+    }
+
+  } catch (e) {
+    print('❌ Firebase initialization error: $e');
+  }
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => FavoriteService()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'SkinCare Store',
+        theme: ThemeData(
+          primaryColor: Colors.pink[400],
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.pink,
+            accentColor: Colors.pink[300],
+          ),
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.pink[50],
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.pink),
+            titleTextStyle: TextStyle(
+              color: Colors.pink[700],
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          fontFamily: 'Poppins',
+        ),
+        home: const SplashScreenWrapper(),
+        routes: {
+          '/dashboard': (context) => const Dashboard(),
+          '/login': (context) => const LoginPage(),
+          '/register': (context) => const RegisterPage(),
+          '/forgot': (context) => const ForgotPasswordPage(),
+          '/delivery': (context) => const DeliveryPage(),
+          '/favorites': (context) => const FavoritesPage(),
+          '/checkout': (context) => CheckoutFormPage(selectedItems: []),
+          '/history': (context) => const PaymentHistoryPage(),
+          '/cart': (context) => const CartPage(),
+          '/products' : (context) => const AllProductsPage(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/search-results') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final query = args?['query'] ?? '';
+            return MaterialPageRoute(
+              builder: (_) => SearchResultsPage(searchQuery: query),
+            );
+          }
+          return null;
+        },
+        onUnknownRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Page Not Found')),
+              body: const Center(
+                child: Text('The requested page was not found.'),
+              ),
+            ),
+          );
+        },
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class SplashScreenWrapper extends StatefulWidget {
+  const SplashScreenWrapper({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<SplashScreenWrapper> createState() => _SplashScreenWrapperState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _SplashScreenWrapperState extends State<SplashScreenWrapper> {
+  @override
+  void initState() {
+    super.initState();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const Dashboard()),
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return const SplashScreen();
   }
 }
